@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -46,7 +47,7 @@ namespace KursachV3
                 return null;
             }
             var dtable = new DataTable();
-            var query = "SELECT " + cols + " FROM " + table + " ";
+            var query = "SELECT " + cols + " FROM " + table;
             if (@where != "")
             {
                 query += " WHERE " + @where;
@@ -57,58 +58,57 @@ namespace KursachV3
             }
             if (sortDestination != "")
             {
-                query += sortDestination;
+                query += " " + sortDestination;
             }
-
             var command = _sqlc.CreateCommand();
             command.CommandText = query;
-
-            var dataAdapter = new SqlDataAdapter(command);
-            dataAdapter.Fill(dtable);
+            try
+            {
+                var dataAdapter = new SqlDataAdapter(command);
+                dataAdapter.Fill(dtable);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
             Disconnect();
             return dtable;
         }
 
         public bool Update(string table, Dictionary<string,object> update, int id = 0)
         {
-                var command = new SqlCommand("UPDATE " + table + " SET ", _sqlc);
-                int counter = 0;
-                //command.CommandText += String.Join(",", update.Select(elem => elem.Key + "=@" + elem.Value));
-                foreach (var key in update.Keys)
-                {
-                    command.CommandText += key + "=@" + key;
-                    command.Parameters.AddWithValue(key, update[key]);
-                    counter++;
-                    if (counter != update.Keys.Count())
-                    {
-                        command.CommandText += ",";
-                    }
-                }
-                if (id != 0)
-                {
-                    command.CommandText += " WHERE id=" + id;
-                }
-                return Exec(command);
+            var command = new SqlCommand("UPDATE " + table + " SET ", _sqlc);
+            command.CommandText += String.Join(",", update.Select(elem => elem.Key + "=@" + elem.Key));
+            command = SetValues(update,command);
+            if (id != 0)
+            {
+                command.CommandText += " WHERE id=" + id;
+            }
+            MessageBox.Show(command.CommandText);
+            return Exec(command);    
         }
         public bool Insert(string table, Dictionary<string,object> vars)
         {
-            SqlCommand sqlcom = _sqlc.CreateCommand();
-            sqlcom.CommandText = "INSERT INTO " + table + " VALUES ("; 
-                //key=@key,
-            int counter = 0;
-            foreach (var key in vars.Keys)
-            {
-                sqlcom.CommandText += "@" + key;
-                sqlcom.Parameters.AddWithValue(key, vars[key]);
-                counter++;
-                if (counter != vars.Keys.Count())
-                {
-                    sqlcom.CommandText += ",";
-                }
-            }
+            var sqlcom = _sqlc.CreateCommand();
+            sqlcom.CommandText = "INSERT INTO " + table + " ";
+            sqlcom.CommandText += "(" + String.Join(",", vars.Select(elem => elem.Key)) + ")";
+            sqlcom.CommandText +=" VALUES ("; 
+            sqlcom.CommandText += String.Join(",", vars.Select(elem => "@" + elem.Key));
+            sqlcom = SetValues(vars, sqlcom);
             sqlcom.CommandText += ")";
             return Exec(sqlcom);
         }
+
+        private static SqlCommand SetValues(Dictionary<string, object> vars, SqlCommand sqlcom)
+        {
+            foreach (var key in vars.Keys)
+            {
+                sqlcom.Parameters.AddWithValue(key, vars[key]);
+            }
+            return sqlcom;
+        }
+
         bool Exec(SqlCommand command)
         {
             if (Connect())
