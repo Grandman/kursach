@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -48,7 +47,7 @@ namespace KursachV3
                 return null;
             }
             var dtable = new DataTable();
-            var query = "SELECT " + cols + " FROM " + table + " ";
+            var query = "SELECT " + cols + " FROM " + table;
             if (@where != "")
             {
                 query += " WHERE " + @where;
@@ -59,9 +58,8 @@ namespace KursachV3
             }
             if (sortDestination != "")
             {
-                query += sortDestination;
+                query += " " + sortDestination;
             }
-
             var command = _sqlc.CreateCommand();
             command.CommandText = query;
             try
@@ -72,7 +70,7 @@ namespace KursachV3
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
-                throw;
+                return null;
             }
             Disconnect();
             return dtable;
