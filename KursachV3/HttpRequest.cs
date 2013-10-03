@@ -10,7 +10,7 @@ namespace KursachV3
 {
     class HttpRequest
     {
-        public static string GetResponse(string url, string data, string method)
+        public string GetResponse(string url, string data, string method)
         {
             var defaultEncoding = Encoding.UTF8;
 
