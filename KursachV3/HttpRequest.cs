@@ -8,9 +8,9 @@ using System.Windows.Forms;
 
 namespace KursachV3
 {
-    class HttpRequest
+    static class HttpRequest
     {
-        public string GetResponse(string url, string data, string method)
+        public static string GetResponse(string url, string data, string method)
         {
             var defaultEncoding = Encoding.UTF8;
 

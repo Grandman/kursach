@@ -7,15 +7,11 @@ using System.Windows.Forms;
 
 namespace KursachV3
 {
-    class Db
+    static class Db
     {
-        readonly SqlConnection _sqlc;
+        static readonly SqlConnection _sqlc = new SqlConnection(Properties.Settings.Default.Database1ConnectionString);
 
-        public Db(string connectionString)
-        {
-            _sqlc = new SqlConnection(connectionString);
-        }
-        bool Connect()
+        static bool Connect()
         {
             try
             {
@@ -29,7 +25,8 @@ namespace KursachV3
             }
 
         }
-        void Disconnect()
+
+        static void Disconnect()
         {
             try
             {
@@ -40,7 +37,7 @@ namespace KursachV3
                 MessageBox.Show(string.Format("Ошибка закрытия подключения\n{0}", exception.Message));
             }
         }
-        public DataTable Select(string cols, string table, string sortColumn = "", string sortDestination = "",string where = "")
+        public static DataTable Select(string cols, string table, string sortColumn = "", string sortDestination = "",string where = "")
         {
             if (!Connect())
             {
@@ -76,7 +73,7 @@ namespace KursachV3
             return dtable;
         }
 
-        public bool Update(string table, Dictionary<string,object> update, int id = 0)
+        public static bool Update(string table, Dictionary<string,object> update, int id = 0)
         {
             var command = new SqlCommand("UPDATE " + table + " SET ", _sqlc);
             command.CommandText += String.Join(",", update.Select(elem => elem.Key + "=@" + elem.Key));
@@ -88,7 +85,7 @@ namespace KursachV3
             MessageBox.Show(command.CommandText);
             return Exec(command);    
         }
-        public bool Insert(string table, Dictionary<string,object> vars)
+        public static bool Insert(string table, Dictionary<string,object> vars)
         {
             var sqlcom = _sqlc.CreateCommand();
             sqlcom.CommandText = "INSERT INTO " + table + " ";
@@ -109,7 +106,7 @@ namespace KursachV3
             return sqlcom;
         }
 
-        bool Exec(SqlCommand command)
+        static bool Exec(SqlCommand command)
         {
             if (Connect())
             {
@@ -129,7 +126,7 @@ namespace KursachV3
             return false;
         }
 
-        public bool Delete(string table, int id)
+        public static bool Delete(string table, int id)
         {
                 var sqlcom = _sqlc.CreateCommand();
                 sqlcom.CommandText = "DELETE FROM " + table + " WHERE id =" + id;

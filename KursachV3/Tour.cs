@@ -1,35 +1,24 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace KursachV3
 {
-    class Tour
+    static class Tour
     {
-        public int ProgressParsing;
-        /// <summary>
-        /// Таблица со спарсенными турами
-        /// </summary>
-        readonly DataTable _tableTours = new DataTable();
-        readonly Db _db = new Db(Properties.Settings.Default.Database1ConnectionString);
         /// <summary>
         /// Хранит города в виде : (город;id)
         /// </summary>
-        readonly Hashtable _htb = new Hashtable();
+        static readonly Hashtable Htb = new Hashtable();
         /// <summary>
         /// Страны
         /// </summary>
-        readonly Dictionary<string, int> _parametrs = new Dictionary<string, int>();
-        public Tour(Db database)
-        {
-            _db = database;
-        }
+        static readonly Dictionary<string, int> Parametrs = new Dictionary<string, int>();
 
-        DataTable ParseTours(string country, DateTime dateTour, int page,int nightFrom, int nightTo, DateTime dateFrom, DateTime dateTo,string townFrom)
+        static DataTable ParseTours(string country, DateTime dateTour, int page,int nightFrom, int nightTo, DateTime dateFrom, DateTime dateTo,string townFrom)
         {
             DataTable tableTours= new DataTable();
             tableTours.Columns.Add("Name");
@@ -37,7 +26,7 @@ namespace KursachV3
             tableTours.Columns.Add("Nights");
             tableTours.Columns.Add("Cost");
             const string url = "http://www.1001tur.ru/cgi-bin/Client.cgi?tourSearchPage=1";
-            var resultpage = HttpRequest.GetResponse(url, "act=search&Page="+page+"&Country=" + _parametrs[country] + "&Curort=&Hotel=&Kat=&Food=&check1=0&TipRazm=2&Chld1=&Chld2=&NightOt=" + nightFrom + "&NightDo=" + nightTo + "&PriceOt=&PriceDo=&SDay=" + dateFrom.Day + "&SMonth=" + dateFrom.Month + "&SYear="+dateFrom.Year+"&EDay=" + dateTo.Day + "&EMonth=" + dateTo.Month + "&EYear="+dateTo.Year+"&SortBy=Price&ShowBy=3&MorePage=1&MorePageStop=1&ctours=0&from_city=" + _htb[townFrom] + "&is_ski=&sortfilter=price&simpleSearch=0", "POST");
+            var resultpage = HttpRequest.GetResponse(url, "act=search&Page="+page+"&Country=" + Parametrs[country] + "&Curort=&Hotel=&Kat=&Food=&check1=0&TipRazm=2&Chld1=&Chld2=&NightOt=" + nightFrom + "&NightDo=" + nightTo + "&PriceOt=&PriceDo=&SDay=" + dateFrom.Day + "&SMonth=" + dateFrom.Month + "&SYear="+dateFrom.Year+"&EDay=" + dateTo.Day + "&EMonth=" + dateTo.Month + "&EYear="+dateTo.Year+"&SortBy=Price&ShowBy=3&MorePage=1&MorePageStop=1&ctours=0&from_city=" + Htb[townFrom] + "&is_ski=&sortfilter=price&simpleSearch=0", "POST");
             resultpage = resultpage.Replace("   ", " ");
             const string patternNameUrl = @"(<div class=""sr_val1_sub1""><!--googleoff: all--><a href="")(http\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?)("" target=""_blank"" rel=""nofollow"">)([^<]*)(</a><!--googleon: all--></div>)";
             const string patternStars = @"(<span class=""sr_hotelscat"">)(\d*)([*]+)(\*</span><span class=""sr_stars""></span>)";
@@ -55,19 +44,19 @@ namespace KursachV3
             }
             return tableTours; 
         }
-        public string GetCity(string city)
+        public static string GetCity(string city)
         {
-            return "" + _htb[city];
+            return "" + Htb[city];
         }
-        public DataTable GetAllToursFromBd(int money = 0)
+        public static DataTable GetAllToursFromBd(int money = 0)
         {
-            var table = money == 0 ? _db.Select("*", "tours", "id", "desc") : _db.Select("*", "tours", "", "", "price<='" + money + "'");
+            var table = money == 0 ? Db.Select("*", "tours", "id", "desc") : Db.Select("*", "tours", "", "", "price<='" + money + "'");
             return table;
         }
 
-        public string[] GetCities()
+        public static string[] GetCities()
         {
-            _htb.Clear();
+            Htb.Clear();
             const string url = "http://www.1001tur.ru/searest.htm";
             var page = HttpRequest.GetResponse(url,"","GET");
             var pattern = @"(<select name=""from_city"" class=""sfs_fake_chouse_select jq_fake_chouse_select"">)([\s\S]*)(\t{4}</select>)";
@@ -79,11 +68,11 @@ namespace KursachV3
             match = regex.Match(cities);
             while (match.Success)
             {
-                _htb.Add(match.Groups[4].Value, match.Groups[2].Value);//HASHTABLE (ГОРОД;ID)
+                Htb.Add(match.Groups[4].Value, match.Groups[2].Value);//HASHTABLE (ГОРОД;ID)
                 match = match.NextMatch();
             }
-            var result = new string[_htb.Keys.Count]; 
-            _htb.Keys.CopyTo(result,0);
+            var result = new string[Htb.Keys.Count]; 
+            Htb.Keys.CopyTo(result,0);
             return result;
         }
         [JsonObject(MemberSerialization.OptIn)]
@@ -95,32 +84,32 @@ namespace KursachV3
             [JsonProperty("name")]
             public string Name { get; set; }
         }
-        public Dictionary<string, int> JsonParsingCountries(int cityId) // происходит при выборе города
+        public static Dictionary<string, int> JsonParsingCountries(int cityId) // происходит при выборе города
         {
-            var id = _htb[cityId].ToString();
+            var id = Htb[cityId].ToString();
             var json = HttpRequest.GetResponse("http://www.1001tur.ru/cgi-bin/get_countries.pl?from_city=" + id + "&json=1","","GET");
             if (json == null)
             {
                 return null;
             }
             var country = JsonConvert.DeserializeObject<Country[]>(json);
-            _parametrs.Clear();
+            Parametrs.Clear();
             foreach (var countries in country)
             {
-                _parametrs.Add(countries.Name, countries.Value);
+                Parametrs.Add(countries.Name, countries.Value);
             }
 
-            return _parametrs;
+            return Parametrs;
         }
-        public void UpdateTour(int id, int price,DateTime date, string description,string hotel,int stars,string url,string country)
+        public static void UpdateTour(int id, int price,DateTime date, string description,string hotel,int stars,string url,string country)
         {
             var vars = ToursValues(price, date, description, hotel, stars, url, country);
-            _db.Update("tours",vars,id);
+            Db.Update("tours",vars,id);
         }
-        public void AddTour(int price, DateTime date, string description, string hotel, int stars, string url, string country)
+        public static void AddTour(int price, DateTime date, string description, string hotel, int stars, string url, string country)
         {
             var vars = ToursValues(price, date, description, hotel, stars, url, country);
-            _db.Insert("tours",vars);
+            Db.Insert("tours",vars);
         }
         private static Dictionary<string,object> ToursValues(int price, DateTime date, string description, string hotel, int stars, string url, string country)
         {
@@ -137,9 +126,9 @@ namespace KursachV3
 
             return vars;
         }
-        public void DelTour(int id)
+        public static void DelTour(int id)
         {
-            _db.Delete("tours", id);
+            Db.Delete("tours", id);
         }
     }
 }
