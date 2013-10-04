@@ -5,59 +5,55 @@ using System.ComponentModel;
 using System.Data;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace KursachV3
 {
     class Tour
     {
-        DataTable tableTours = new DataTable();
+        public int ProgressParsing;
+        /// <summary>
+        /// Таблица со спарсенными турами
+        /// </summary>
+        readonly DataTable _tableTours = new DataTable();
         readonly Db _db = new Db(Properties.Settings.Default.Database1ConnectionString);
+        /// <summary>
+        /// Хранит города в виде : (город;id)
+        /// </summary>
         readonly Hashtable _htb = new Hashtable();
-        readonly Dictionary<string, int> _parametrs = new Dictionary<string, int>();//страны
-        private readonly BackgroundWorker _parseTours = new BackgroundWorker();
+        /// <summary>
+        /// Страны
+        /// </summary>
+        readonly Dictionary<string, int> _parametrs = new Dictionary<string, int>();
         public Tour(Db database)
         {
             _db = database;
-            _parseTours.WorkerReportsProgress = true;
-            _parseTours.WorkerSupportsCancellation = true;
+        }
+
+        DataTable ParseTours(string country, DateTime dateTour, int page,int nightFrom, int nightTo, DateTime dateFrom, DateTime dateTo,string townFrom)
+        {
+            DataTable tableTours= new DataTable();
             tableTours.Columns.Add("Name");
             tableTours.Columns.Add("Stars");
             tableTours.Columns.Add("Nights");
             tableTours.Columns.Add("Cost");
-
-            //ParseTours.DoWork += new System.ComponentModel.DoWorkEventHandler(this.ParseToursDoWork);
-            //ParseTours.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.ParseToursCompleted);
-            //ParseTours.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.ParseToursProgressChanged);
-        }
-        void ParseToursDoWork(object sender, DoWorkEventArgs e)//Работа BackgroundWorker(Парсинг и добавление в таблицу)
-        {
-            for (int i = 1; i <= 20; i++)
+            const string url = "http://www.1001tur.ru/cgi-bin/Client.cgi?tourSearchPage=1";
+            var resultpage = HttpRequest.GetResponse(url, "act=search&Page="+page+"&Country=" + _parametrs[country] + "&Curort=&Hotel=&Kat=&Food=&check1=0&TipRazm=2&Chld1=&Chld2=&NightOt=" + nightFrom + "&NightDo=" + nightTo + "&PriceOt=&PriceDo=&SDay=" + dateFrom.Day + "&SMonth=" + dateFrom.Month + "&SYear="+dateFrom.Year+"&EDay=" + dateTo.Day + "&EMonth=" + dateTo.Month + "&EYear="+dateTo.Year+"&SortBy=Price&ShowBy=3&MorePage=1&MorePageStop=1&ctours=0&from_city=" + _htb[townFrom] + "&is_ski=&sortfilter=price&simpleSearch=0", "POST");
+            resultpage = resultpage.Replace("   ", " ");
+            const string patternNameUrl = @"(<div class=""sr_val1_sub1""><!--googleoff: all--><a href="")(http\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?)("" target=""_blank"" rel=""nofollow"">)([^<]*)(</a><!--googleon: all--></div>)";
+            const string patternStars = @"(<span class=""sr_hotelscat"">)(\d*)([*]+)(\*</span><span class=""sr_stars""></span>)";
+            const string patternNights = @"(<span class=""sr_night"">)(\d*)(</span> ночей)";
+            const string patternCost = @"(<span class=""actualization_price"">)(\d*)(&nbsp;)(\d*)(</span> руб</a>)";
+            const string patternDate = @"(<td class=""sr_val3""><div class=""sr_val3_sub1"">)(\d*).(\d*)(</div></td>)";
+            MatchCollection nameAndUrlMatches = Regex.Matches(resultpage, patternNameUrl);
+            MatchCollection starsMatches = Regex.Matches(resultpage, patternStars);
+            MatchCollection nightsMatches = Regex.Matches(resultpage, patternNights);
+            MatchCollection costsMatches = Regex.Matches(resultpage, patternCost);
+            MatchCollection dateMatches = Regex.Matches(resultpage, patternDate);
+            for (int mtch = 0; mtch < nameAndUrlMatches.Count; mtch++)
             {
-                string[] senders = (string[])e.Argument;
-                HttpRequest http = new HttpRequest();
-                const string url = "http://www.1001tur.ru/cgi-bin/Client.cgi?tourSearchPage=1";
-                string resultpage = http.GetResponse(url, "act=search&Page=" + i + senders[0], "POST");
-                resultpage = resultpage.Replace("   ", " ");
-                const string patternNameUrl = @"(<div class=""sr_val1_sub1""><!--googleoff: all--><a href="")(http\://[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(/\S*)?)("" target=""_blank"" rel=""nofollow"">)([^<]*)(</a><!--googleon: all--></div>)";
-                const string patternStars = @"(<span class=""sr_hotelscat"">)(\d*)([*]+)(\*</span><span class=""sr_stars""></span>)";
-                const string patternNights = @"(<span class=""sr_night"">)(\d*)(</span> ночей)";
-                const string patternCost = @"(<span class=""actualization_price"">)(\d*)(&nbsp;)(\d*)(</span> руб</a>)";
-                MatchCollection nameAndUrlMatches = Regex.Matches(resultpage, patternNameUrl);
-                MatchCollection starsMatches = Regex.Matches(resultpage, patternStars);
-                MatchCollection nightsMatches = Regex.Matches(resultpage, patternNights);
-                MatchCollection costsMatches = Regex.Matches(resultpage, patternCost);
-                string date = senders[1];
-                for (int mtch = 0; mtch < nameAndUrlMatches.Count; mtch++)
-                {
-                    tableTours.Rows.Add(nameAndUrlMatches[mtch].Groups[5].Value, starsMatches[mtch].Groups[2].Value, nightsMatches[mtch].Groups[2].Value, costsMatches[mtch].Groups[2].Value + costsMatches[mtch].Groups[4].Value, nameAndUrlMatches[mtch].Groups[2].Value, date, senders[2]);
-                }
-                if (tableTours.Rows.Count == 0 && i == 1)
-                {
-                    _parseTours.CancelAsync();
-                }
-                _parseTours.ReportProgress(i);
+                tableTours.Rows.Add(nameAndUrlMatches[mtch].Groups[5].Value, starsMatches[mtch].Groups[2].Value, nightsMatches[mtch].Groups[2].Value, costsMatches[mtch].Groups[2].Value + costsMatches[mtch].Groups[4].Value, nameAndUrlMatches[mtch].Groups[2].Value, dateMatches[mtch].Groups[2], country);
             }
+            return tableTours; 
         }
         public string GetCity(string city)
         {
@@ -72,7 +68,8 @@ namespace KursachV3
         public string[] GetCities()
         {
             _htb.Clear();
-            var page = HttpRequest.GetResponse("http://www.1001tur.ru/searest.htm","","GET");
+            const string url = "http://www.1001tur.ru/searest.htm";
+            var page = HttpRequest.GetResponse(url,"","GET");
             var pattern = @"(<select name=""from_city"" class=""sfs_fake_chouse_select jq_fake_chouse_select"">)([\s\S]*)(\t{4}</select>)";
             var regex = new Regex(pattern);
             var match = regex.Match(page);
