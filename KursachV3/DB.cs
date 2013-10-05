@@ -48,7 +48,6 @@ namespace KursachV3
                 {
                     command.CommandText += " WHERE id=" + id;
                 }
-                MessageBox.Show(command.CommandText);
                 return Exec(command);
             }
         }
