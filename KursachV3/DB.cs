@@ -9,13 +9,13 @@ namespace KursachV3
 {
     static class Db
     {
-        static readonly SqlConnection _sqlc = new SqlConnection(Properties.Settings.Default.Database1ConnectionString);
+        static readonly SqlConnection Sqlc = new SqlConnection(Properties.Settings.Default.Database1ConnectionString);
 
         static bool Connect()
         {
             try
             {
-                _sqlc.Open();
+                Sqlc.Open();
                 return true;
             }
             catch (SqlException ex)
@@ -30,7 +30,7 @@ namespace KursachV3
         {
             try
             {
-                _sqlc.Close();
+                Sqlc.Close();
             }
             catch (SqlException exception)
             {
@@ -57,7 +57,7 @@ namespace KursachV3
             {
                 query += " " + sortDestination;
             }
-            var command = _sqlc.CreateCommand();
+            var command = Sqlc.CreateCommand();
             command.CommandText = query;
             try
             {
@@ -75,7 +75,7 @@ namespace KursachV3
 
         public static bool Update(string table, Dictionary<string,object> update, int id = 0)
         {
-            var command = new SqlCommand("UPDATE " + table + " SET ", _sqlc);
+            var command = new SqlCommand("UPDATE " + table + " SET ", Sqlc);
             command.CommandText += String.Join(",", update.Select(elem => elem.Key + "=@" + elem.Key));
             command = SetValues(update,command);
             if (id != 0)
@@ -87,7 +87,7 @@ namespace KursachV3
         }
         public static bool Insert(string table, Dictionary<string,object> vars)
         {
-            var sqlcom = _sqlc.CreateCommand();
+            var sqlcom = Sqlc.CreateCommand();
             sqlcom.CommandText = "INSERT INTO " + table + " ";
             sqlcom.CommandText += "(" + String.Join(",", vars.Select(elem => elem.Key)) + ")";
             sqlcom.CommandText +=" VALUES ("; 
@@ -128,7 +128,7 @@ namespace KursachV3
 
         public static bool Delete(string table, int id)
         {
-                var sqlcom = _sqlc.CreateCommand();
+                var sqlcom = Sqlc.CreateCommand();
                 sqlcom.CommandText = "DELETE FROM " + table + " WHERE id =" + id;
                 return Exec(sqlcom);
         }
