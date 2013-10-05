@@ -5,57 +5,67 @@ using System.Net;
 using System.Net.Cache;
 using System.Text;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace KursachV3
 {
-    class HttpRequest
+    static class HttpRequest
     {
-        public string GetResponse(string url, string data, string method)
+        private static HttpWebRequest CreateRequest(string url, string method)
         {
-            var defaultEncoding = Encoding.UTF8;
-
-            if (url == null) return null;
-            Uri uri;
+            int timeout = Convert.ToInt16(ConfigurationManager.AppSettings["timeout"]);
+            string userAgent = ConfigurationManager.AppSettings["userAgent"];
 
             try
             {
-                if (url.Substring(0, 7) != "http://") url = "http://" + url;
-                uri = new Uri(url);
+                var uri = new Uri(url);
+                var request = (HttpWebRequest)WebRequest.Create(uri);
+                if (method != "GET")
+                {
+                    WebRequest.DefaultWebProxy = new WebProxy();
+                    request.Timeout = timeout;
+                    request.UserAgent = userAgent;
+                    var policy = new HttpRequestCachePolicy(HttpRequestCacheLevel.Default);
+                    HttpWebRequest.DefaultCachePolicy = policy;
+                    var noCachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
+                    request.CachePolicy = noCachePolicy;
+                }
+                return request;
             }
             catch (Exception err)
             {
                 MessageBox.Show(err.Message);
                 return null;
             }
+        }
+        private static HttpWebRequest WriteParamsToRequest(HttpWebRequest request, string data)
+        {
+            if (data != null)
+            {
+                request.ContentType = ConfigurationManager.AppSettings["contentType"];
 
+                var byteData = Encoding.UTF8.GetBytes(data);
+                request.ContentLength = byteData.Length;
+                using (Stream requestStream = request.GetRequestStream())
+                {
+                    requestStream.Write(byteData, 0, byteData.Length);
+                }
+            }
+            return request;
+        }
+        public static string GetResponse(string url, string data, string method)
+        {
+            var defaultEncoding = Encoding.UTF8;
+            if (url == null)
+                return null;
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(uri);
-                if(method!="GET")
+                var request = CreateRequest(url, method);
+                request.Method = method;
+                if (method != "GET")
                 {
-                    WebRequest.DefaultWebProxy = new WebProxy();
-                    request.Timeout = 15000;
-                    request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11";
-                    request.Method = method;
-
-                    var policy = new HttpRequestCachePolicy(HttpRequestCacheLevel.Default);
-                    HttpWebRequest.DefaultCachePolicy = policy;
-                    var noCachePolicy = new HttpRequestCachePolicy(HttpRequestCacheLevel.NoCacheNoStore);
-                    request.CachePolicy = noCachePolicy;
-
-                    if (data != null)
-                    {
-                        request.ContentType = "application/x-www-form-urlencoded";
-
-                        var byteData = Encoding.UTF8.GetBytes(data);
-                        request.ContentLength = byteData.Length;
-                        using (Stream requestStream = request.GetRequestStream())
-                        {
-                            requestStream.Write(byteData, 0, byteData.Length);
-                        }
-                    }
+                    request = WriteParamsToRequest(request, data);
                 }
-
                 var response = (HttpWebResponse)request.GetResponse();
                 using (var responseStream = response.GetResponseStream())
                 {
