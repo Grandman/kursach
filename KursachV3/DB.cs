@@ -51,7 +51,7 @@ namespace KursachV3
             }
             if (sortColumn != "")
             {
-                query += " order by " + sortColumn + " ";
+                query += " order by " + sortColumn;
             }
             if (sortDestination != "")
             {
