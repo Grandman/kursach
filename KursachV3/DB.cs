@@ -32,7 +32,16 @@ namespace KursachV3
                 var command = sqlc.CreateCommand();
                 command.CommandText = query;
                 var dataAdapter = new SqlDataAdapter(command);
-                dataAdapter.Fill(dtable);
+                try
+                {
+                    dataAdapter.Fill(dtable);
+                }
+                catch (Exception exception)
+                {
+
+                    MessageBox.Show("Ошибка заполнения таблицы: " + exception.Message +"\n" +command.CommandText + "\nПриложение завершит работу");
+                    Application.Exit();
+                }
                 return dtable;
             }
         }
