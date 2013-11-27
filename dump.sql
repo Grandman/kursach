@@ -4,6 +4,7 @@ CREATE TABLE [dbo].[articles] (
     [date] DATE NOT NULL,
     [type] INT  NOT NULL,
     [kind] INT  NOT NULL,
+    [name] NVARCHAR(50) NOT NULL, 
     PRIMARY KEY CLUSTERED ([id] ASC)
 );
 CREATE TABLE [dbo].[client_tour] (
