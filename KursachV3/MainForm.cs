@@ -1,13 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace KursachV3
@@ -19,16 +11,90 @@ namespace KursachV3
             InitializeComponent();
             DataTable table = Article.GetArticles(0);
             dataGridView1.DataSource = table;
-            dataGridView1.Columns[0].Visible = false;
-            dataGridView1.Columns[3].Visible = false;
-            dataGridView1.Columns[4].Visible = false;
             toIntervalDatePicker.Enabled = false;
             fromIntervalDatePicker.Enabled = false;
             allTypeFilterRadioButton.Checked = true;
+            monthFilterRadioButton.Checked = true;
+            radioButton3.Checked = true;
         }
 
         private void ChangeFilter(object sender, EventArgs e)
         {
+            string groupby = "";
+            if (radioButton1.Checked)
+            {
+                groupby = "date";    
+            }
+            if (radioButton2.Checked)
+            {
+                groupby = "name";
+            }
+            if (groupby == "")
+            {
+                profitFilterRadioButton.Enabled = true;
+                consumptionFIlterRadioButton.Enabled = true;
+                allTypeFilterRadioButton.Enabled = true;
+            }
+            else
+            {
+                profitFilterRadioButton.Enabled = false;
+                consumptionFIlterRadioButton.Enabled = false;
+                allTypeFilterRadioButton.Enabled = false;
+            }
+            int filtertype = 0;
+            if (profitFilterRadioButton.Checked)
+            {
+                filtertype = 1;
+            }
+            if (consumptionFIlterRadioButton.Checked)
+            {
+                filtertype = 2;
+            }
+            if (monthFilterRadioButton.Checked)
+            {
+                dataGridView1.DataSource = Article.GetArticles(filtertype, 1, groupby);
+            }
+            if (threeMonthsFilterRadioButton.Checked)
+            {
+                dataGridView1.DataSource = Article.GetArticles(filtertype, 3, groupby);
+            }
+            if (yearFilterRadioButton.Checked)
+            {
+                dataGridView1.DataSource = Article.GetArticles(filtertype, 12, groupby);
+            }
+            if (intervalFilterRadioButton.Checked)
+            {
+                toIntervalDatePicker.MinDate = fromIntervalDatePicker.Value;
+                dataGridView1.DataSource = Article.GetArticles(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype, groupby);
+                toIntervalDatePicker.Enabled = true;
+                fromIntervalDatePicker.Enabled = true;
+            }
+            else
+            {
+                toIntervalDatePicker.Enabled = false;
+                fromIntervalDatePicker.Enabled = false;
+            }
+
+        }
+
+        private void dataGridView1_CellContextMenuStripChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            MessageBox.Show(dataGridView1[e.ColumnIndex, e.RowIndex].Value.ToString());
+        }
+
+        private void dataGridView1_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
+        {
+            contextMenuStrip1.Show(Cursor.Position);
+        }
+
+        private void DeleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            int selectedRow = dataGridView1.CurrentCell.RowIndex;
+            var dataGridViewCell = dataGridView1[0, selectedRow];
+            if (dataGridViewCell == null || dataGridViewCell.Value.ToString() == "") 
+                return;
+            if (Article.DeleteArticle(Convert.ToInt16(dataGridViewCell.Value)))
+                MessageBox.Show("Запись удалена");
             int filtertype = 0;
             if (profitFilterRadioButton.Checked)
             {
@@ -53,7 +119,7 @@ namespace KursachV3
             if (intervalFilterRadioButton.Checked)
             {
                 toIntervalDatePicker.MinDate = fromIntervalDatePicker.Value;
-                dataGridView1.DataSource = Article.GetArticles(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype);
+                dataGridView1.DataSource = Article.GetArticles(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype,"name");
                 toIntervalDatePicker.Enabled = true;
                 fromIntervalDatePicker.Enabled = true;
             }
@@ -62,7 +128,12 @@ namespace KursachV3
                 toIntervalDatePicker.Enabled = false;
                 fromIntervalDatePicker.Enabled = false;
             }
-           
+        }
+
+        private void AddArticleButton(object sender, EventArgs e)
+        {
+            AddArticleForm addArticleForm = new AddArticleForm();
+            addArticleForm.ShowDialog();
         }
     }
 }

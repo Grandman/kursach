@@ -11,16 +11,19 @@ namespace KursachV3
     {
         static readonly string ConnectionString = Properties.Settings.Default.Database1ConnectionString;
 
-        public static DataTable Select(string cols, string table, string sortColumn = "", string sortDestination = "", string where = "")
+        public static DataTable Select(string cols, string table, string sortColumn = "", string sortDestination = "", string where = "",string orderBy = "")
         {
             using (SqlConnection sqlc = new SqlConnection(ConnectionString))
             {
+                //GROUP BY
                 var dtable = new DataTable();
                 var query = "SELECT " + cols + " FROM " + table;
                 if (@where != "")
                 {
                     query += " WHERE " + @where;
                 }
+                if(orderBy != "")
+                    query += " GROUP BY " + orderBy;
                 if (sortColumn != "")
                 {
                     query += " order by " + sortColumn;
@@ -93,9 +96,11 @@ namespace KursachV3
         {
             using (SqlConnection sqlc = new SqlConnection(ConnectionString))
             {
+                sqlc.Open();
                 var sqlcom = sqlc.CreateCommand();
                 sqlcom.CommandText = "DELETE FROM " + table + " WHERE id=" + id;
-                return Exec(sqlcom);
+                bool result = Exec(sqlcom);;
+                return result;
             }
         }
     }
