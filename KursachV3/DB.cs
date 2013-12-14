@@ -53,6 +53,7 @@ namespace KursachV3
         {
             using (SqlConnection sqlc = new SqlConnection(ConnectionString))
             {
+                sqlc.Open();
                 var command = new SqlCommand("UPDATE " + table + " SET ", sqlc);
                 command.CommandText += String.Join(",", update.Select(elem => elem.Key + "=@" + elem.Key));
                 command = SetValues(update, command);
@@ -67,6 +68,7 @@ namespace KursachV3
         {
             using (SqlConnection sqlc = new SqlConnection(ConnectionString))
             {
+                sqlc.Open();
                 var sqlcom = sqlc.CreateCommand();
                 sqlcom.CommandText = "INSERT INTO " + table + " ";
                 sqlcom.CommandText += "(" + String.Join(",", vars.Select(elem => elem.Key)) + ")";

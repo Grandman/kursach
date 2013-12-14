@@ -9,7 +9,7 @@ namespace KursachV3
         public MainForm()
         {
             InitializeComponent();
-            DataTable table = Article.GetArticles(0);
+            DataTable table = Article.GetAccounting(0);
             dataGridView1.DataSource = table;
             toIntervalDatePicker.Enabled = false;
             fromIntervalDatePicker.Enabled = false;
@@ -52,20 +52,20 @@ namespace KursachV3
             }
             if (monthFilterRadioButton.Checked)
             {
-                dataGridView1.DataSource = Article.GetArticles(filtertype, 1, groupby);
+                dataGridView1.DataSource = Article.GetAccounting(filtertype, 1, groupby);
             }
             if (threeMonthsFilterRadioButton.Checked)
             {
-                dataGridView1.DataSource = Article.GetArticles(filtertype, 3, groupby);
+                dataGridView1.DataSource = Article.GetAccounting(filtertype, 3, groupby);
             }
             if (yearFilterRadioButton.Checked)
             {
-                dataGridView1.DataSource = Article.GetArticles(filtertype, 12, groupby);
+                dataGridView1.DataSource = Article.GetAccounting(filtertype, 12, groupby);
             }
             if (intervalFilterRadioButton.Checked)
             {
                 toIntervalDatePicker.MinDate = fromIntervalDatePicker.Value;
-                dataGridView1.DataSource = Article.GetArticles(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype, groupby);
+                dataGridView1.DataSource = Article.GetAccounting(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype, groupby);
                 toIntervalDatePicker.Enabled = true;
                 fromIntervalDatePicker.Enabled = true;
             }
@@ -106,20 +106,20 @@ namespace KursachV3
             }
             if (monthFilterRadioButton.Checked)
             {
-                dataGridView1.DataSource = Article.GetArticles(filtertype, 1);
+                dataGridView1.DataSource = Article.GetAccounting(filtertype, 1);
             }
             if (threeMonthsFilterRadioButton.Checked)
             {
-                dataGridView1.DataSource = Article.GetArticles(filtertype, 3);
+                dataGridView1.DataSource = Article.GetAccounting(filtertype, 3);
             }
             if (yearFilterRadioButton.Checked)
             {
-                dataGridView1.DataSource = Article.GetArticles(filtertype, 12);
+                dataGridView1.DataSource = Article.GetAccounting(filtertype, 12);
             }
             if (intervalFilterRadioButton.Checked)
             {
                 toIntervalDatePicker.MinDate = fromIntervalDatePicker.Value;
-                dataGridView1.DataSource = Article.GetArticles(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype,"name");
+                dataGridView1.DataSource = Article.GetAccounting(fromIntervalDatePicker.Value, toIntervalDatePicker.Value, filtertype,"name");
                 toIntervalDatePicker.Enabled = true;
                 fromIntervalDatePicker.Enabled = true;
             }
@@ -130,10 +130,22 @@ namespace KursachV3
             }
         }
 
-        private void AddArticleButton(object sender, EventArgs e)
+        private void AddArticleButtonClick(object sender, EventArgs e)
         {
             AddArticleForm addArticleForm = new AddArticleForm();
             addArticleForm.ShowDialog();
+        }
+
+        private void UpdateArticleButtonClick(object sender, EventArgs e)
+        {
+            UpdateArticleForm updateArticleForm = new UpdateArticleForm();
+            updateArticleForm.ShowDialog();
+        }
+
+        private void AddAccountingButtonClick(object sender, EventArgs e)
+        {
+            AddAcountingForm addAcountingForm = new AddAcountingForm();
+            addAcountingForm.ShowDialog();
         }
     }
 }

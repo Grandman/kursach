@@ -1,26 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using NetOffice.DAOApi;
 using DataTable = System.Data.DataTable;
 
 namespace KursachV3
 {
     static class Article
     {
-        public static bool AddArticle(int size, DateTime date, int type, int kind)
+        public static bool AddArticle(string name,int type,int limit)
         {
-            Dictionary<string,object> vars = ArticleValues(size, date, type, kind);
+            Dictionary<string,object> vars = ArticleValues(name,type,limit);
             return Db.Insert("articles", vars);
         }
 
-        private static Dictionary<string,object> ArticleValues (int size, DateTime date, int type,int kind)
+        public static bool AddAccounting(int articleId, DateTime date, int size)
         {
-            return new Dictionary<string, object> { { "size", size }, { "date", date }, { "type", type }, { "kind", kind } };
+            Dictionary<string, object> vars = AccountingValues(articleId, date, size);
+            return Db.Insert("accounting", vars);
         }
-        public static bool UpdateArticle(int size, DateTime date, int type, int kind,int id)
+
+        public static bool CheckNameArticle(string name)
         {
-            Dictionary<string, object> vars = ArticleValues(size, date, type, kind);
+            DataTable table = Db.Select("name", "articles", "", "", "name = N'" + name + "'");
+            return table != null && table.Rows.Count != 0 && table.Rows[0][0] != null &&
+                   String.Equals(table.Rows[0][0].ToString(), name, StringComparison.CurrentCultureIgnoreCase);
+        }
+        private static Dictionary<string, object> AccountingValues(int articleId, DateTime date, int size)
+        {
+            return new Dictionary<string, object> { { "article_id", articleId }, { "date", date }, { "size", size } };
+        }
+        private static Dictionary<string, object> ArticleValues(string name, int type, int limit)
+        {
+            return new Dictionary<string, object> { { "name", name }, { "type", type }, { "limit", limit } };
+        }
+        public static bool UpdateArticle(string name, int type, int limit, int id)
+        {
+            Dictionary<string, object> vars = ArticleValues(name, type, limit);
             return Db.Update("articles", vars, id);
         }
         public static bool DeleteArticle(int id)
@@ -48,6 +63,11 @@ namespace KursachV3
             return table;
         }
 
+        public static DataTable GetNamesArticles()
+        {
+            return Db.Select("id,name", "articles");
+        }
+
         /// <summary>
         /// Получение таблицы статей за определенное количество месяцев
         /// </summary>
@@ -55,35 +75,21 @@ namespace KursachV3
         /// <param name="month">Количество месяцев</param>
         /// <param name="groupby">Если есть группировка</param>
         /// <returns>Таблица со статьями</returns>
-        public static DataTable GetArticles(int filterType, int month=0,string groupby="")
+        public static DataTable GetAccounting(int filterType, int month=0,string groupby="")
         {
             DateTime date = DateTime.Now.AddMonths(-month);
-            return GetArticles(date, DateTime.Now, filterType, groupby);
+            return GetAccounting(date, DateTime.Now, filterType, groupby);
         }
 
-        public static DataTable GetArticles(DateTime from, DateTime to,int filterType,string groupBy)
+        public static DataTable GetAccounting(DateTime from, DateTime to,int filterType,string groupBy)
         {
             if (groupBy == "")
                 return
-                    Db.Select("id,name,date, case when type = 1 then 'profit' when type = 0 then 'consuption' end", "articles", "date", "asc",
-                        "(date>='" + @from.ToString("MM/dd/yyyy") + "') AND (date<='" + to.ToString("MM/dd/yyyy") +
-                        "') AND (" + FilterConvert(filterType) + ")");
-            if (groupBy == "date")
-            {
-                return Db.Select("DISTINCT a.date as Дата,p.Доход,c.Расход,-ISNULL(c.Расход,0)+ISNULL(p.Доход,0) as Итого", "articles as a FULL OUTER JOIN (SELECT date,sum(size) as Доход FROM articles WHERE type = 0 AND (date>='" +
-                                                                                                        @from.ToString("MM/dd/yyyy") + "') AND (date<='" + to.ToString("MM/dd/yyyy") +
-                                                                                                        "') GROUP BY date) as p on a.date = p.date RIGHT OUTER JOIN (SELECT date,sum(size) as Расход FROM articles WHERE type = 1 and (date>='" +
-                                                                                                        @from.ToString("MM/dd/yyyy") + "') AND (date<='" + to.ToString("MM/dd/yyyy") +
-                                                                                                        "') GROUP BY date) as c on a.date = c.date");
-            }
-            if (groupBy == "name")
-            {
-                return Db.Select("DISTINCT a.name as Название,p.Доход,c.Расход,-ISNULL(c.Расход,0)+ISNULL(p.Доход,0) as Итого", "articles as a FULL OUTER JOIN (SELECT name,sum(size) as Доход FROM articles WHERE type = 0 AND (date>='" +
-                                                                                                       @from.ToString("MM/dd/yyyy") + "') AND (date<='" + to.ToString("MM/dd/yyyy") +
-                                                                                                       "') GROUP BY name) as p on a.name = p.name RIGHT OUTER JOIN (SELECT name,sum(size) as Расход FROM articles WHERE type = 1 and (date>='" +
-                                                                                                       @from.ToString("MM/dd/yyyy") + "') AND (date<='" + to.ToString("MM/dd/yyyy") +
-                                                                                                       "') GROUP BY name) as c on a.name = c.name");
-            }
+                    Db.Select(
+                        "sum(a.size) as Сумма,b.name as Название,case when b.type = 0 then N'Доход' when b.type = 1 then N'Расход' end as Тип",
+                        "accounting as a  INNER JOIN (SELECT id,name,type FROM articles) as b on b.id=a.article_id WHERE a.date>='" +
+                         @from.ToString("MM/dd/yyyy") + "' AND a.date<='" + to.ToString("MM/dd/yyyy") + "' AND (" + FilterConvert(filterType) + ") Group By b.name,b.type");
+      
             return null;
         }
 
@@ -93,11 +99,11 @@ namespace KursachV3
             switch (filterType)
             {
                 case 1:
-                    return "type=0";
+                    return "b.type=0";
                 case 2:
-                    return "type=1";
+                    return "b.type=1";
                 default:
-                    return "type=0 OR type=1";
+                    return "b.type=0 OR b.type=1";
             }
             
         }

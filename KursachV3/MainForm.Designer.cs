@@ -33,7 +33,9 @@
             this.статьиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.добавитьToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.редактированиеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.удалениеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.записиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.добавитьToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.редактированиеУдалениеToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.турыToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.подборТуровToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
@@ -70,6 +72,7 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.статьиToolStripMenuItem,
+            this.записиToolStripMenuItem,
             this.турыToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -81,8 +84,7 @@
             // 
             this.статьиToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.добавитьToolStripMenuItem,
-            this.редактированиеToolStripMenuItem,
-            this.удалениеToolStripMenuItem});
+            this.редактированиеToolStripMenuItem});
             this.статьиToolStripMenuItem.Name = "статьиToolStripMenuItem";
             this.статьиToolStripMenuItem.Size = new System.Drawing.Size(67, 24);
             this.статьиToolStripMenuItem.Text = "Статьи";
@@ -90,21 +92,38 @@
             // добавитьToolStripMenuItem
             // 
             this.добавитьToolStripMenuItem.Name = "добавитьToolStripMenuItem";
-            this.добавитьToolStripMenuItem.Size = new System.Drawing.Size(192, 24);
+            this.добавитьToolStripMenuItem.Size = new System.Drawing.Size(265, 24);
             this.добавитьToolStripMenuItem.Text = "Добавление";
-            this.добавитьToolStripMenuItem.Click += new System.EventHandler(this.AddArticleButton);
+            this.добавитьToolStripMenuItem.Click += new System.EventHandler(this.AddArticleButtonClick);
             // 
             // редактированиеToolStripMenuItem
             // 
             this.редактированиеToolStripMenuItem.Name = "редактированиеToolStripMenuItem";
-            this.редактированиеToolStripMenuItem.Size = new System.Drawing.Size(192, 24);
-            this.редактированиеToolStripMenuItem.Text = "Редактирование";
+            this.редактированиеToolStripMenuItem.Size = new System.Drawing.Size(265, 24);
+            this.редактированиеToolStripMenuItem.Text = "Редактирование/Удаление";
+            this.редактированиеToolStripMenuItem.Click += new System.EventHandler(this.UpdateArticleButtonClick);
             // 
-            // удалениеToolStripMenuItem
+            // записиToolStripMenuItem
             // 
-            this.удалениеToolStripMenuItem.Name = "удалениеToolStripMenuItem";
-            this.удалениеToolStripMenuItem.Size = new System.Drawing.Size(192, 24);
-            this.удалениеToolStripMenuItem.Text = "Удаление";
+            this.записиToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.добавитьToolStripMenuItem2,
+            this.редактированиеУдалениеToolStripMenuItem});
+            this.записиToolStripMenuItem.Name = "записиToolStripMenuItem";
+            this.записиToolStripMenuItem.Size = new System.Drawing.Size(71, 24);
+            this.записиToolStripMenuItem.Text = "Записи";
+            // 
+            // добавитьToolStripMenuItem2
+            // 
+            this.добавитьToolStripMenuItem2.Name = "добавитьToolStripMenuItem2";
+            this.добавитьToolStripMenuItem2.Size = new System.Drawing.Size(265, 24);
+            this.добавитьToolStripMenuItem2.Text = "Добавление";
+            this.добавитьToolStripMenuItem2.Click += new System.EventHandler(this.AddAccountingButtonClick);
+            // 
+            // редактированиеУдалениеToolStripMenuItem
+            // 
+            this.редактированиеУдалениеToolStripMenuItem.Name = "редактированиеУдалениеToolStripMenuItem";
+            this.редактированиеУдалениеToolStripMenuItem.Size = new System.Drawing.Size(265, 24);
+            this.редактированиеУдалениеToolStripMenuItem.Text = "Редактирование/Удаление";
             // 
             // турыToolStripMenuItem
             // 
@@ -379,6 +398,7 @@
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "Form1";
+            this.Activated += new System.EventHandler(this.ChangeFilter);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
@@ -400,7 +420,6 @@
         private System.Windows.Forms.ToolStripMenuItem статьиToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem добавитьToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem редактированиеToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem удалениеToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem турыToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem подборТуровToolStripMenuItem;
         private System.Windows.Forms.DataGridView dataGridView1;
@@ -425,6 +444,9 @@
         private System.Windows.Forms.RadioButton radioButton3;
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButton1;
+        private System.Windows.Forms.ToolStripMenuItem записиToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem добавитьToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem редактированиеУдалениеToolStripMenuItem;
 
 
     }

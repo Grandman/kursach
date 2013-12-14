@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
@@ -30,6 +31,7 @@ namespace KursachV3
         /// <returns></returns>
         static DataTable ParseTours(string country, int page, int nightFrom, int nightTo, DateTime dateFrom, DateTime dateTo, string townFrom)
         {
+            
             DataTable tableTours = new DataTable();
             tableTours.Columns.Add("Name");
             tableTours.Columns.Add("Stars");
@@ -81,7 +83,6 @@ namespace KursachV3
             }
             return tableTours;
         }
-
         static int GetYear (DateTime dateFrom, DateTime dateTo, int tourMonth,int tourDay)
         {
             return Convert.ToInt16(tourMonth) < dateFrom.Month
